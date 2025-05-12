@@ -132,39 +132,7 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         
     }
     
-    // 광고 데이터 안에 제조사 데이터가 있는지 확인
-    func manufacturerName(_ advertisementData: [String : Any]) -> String? {
-        guard let manufacturerData = advertisementData[CBAdvertisementDataManufacturerDataKey] as? Data else {
-            return nil
-        }
-        
-        print("🏷 제조사 데이터: \(manufacturerData as NSData)")
-        
-        // 바이트 배열로 변환
-        let bytes = [UInt8](manufacturerData)
-        
-        // 예시: 앞 2바이트는 제조사 ID (리틀 엔디안)
-        if bytes.count >= 2 {
-            let manufacturerID = UInt16(bytes[1]) << 8 | UInt16(bytes[0])
-            print("🏭 제조사 ID: \(String(format: "0x%04X", manufacturerID))")
-            
-            let findDevice = companyIdentifiers?.first(where: { "\($0["value"] ?? "")" == "\(manufacturerID)" })
-            
-            if let manufacturerName = "\(findDevice?["name"] ?? "")".toOptionalIfEmpty {
-                print("🏭 제조사 명: \(manufacturerName)")
-                return manufacturerName
-            }
-            
-            // 이후 바이트는 커스텀 데이터
-            let customPayload = bytes.dropFirst(2)
-            print("📦 제조사 정의 데이터: \(customPayload.map { String(format: "%02X", $0) }.joined(separator: " "))")
-            return nil
-        } else {
-            return nil
-        }
-    }
-    
-    // 기기 연결가 연결되면 호출되는 메서드입니다.
+    // 기기가 연결되면 호출되는 메서드입니다.
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         peripheral.delegate = self
         pendingPeripheral = nil
@@ -172,6 +140,10 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     
         // peripheral의 Service들을 검색합니다.파라미터를 nil으로 설정하면 peripheral의 모든 service를 검색합니다.
         peripheral.discoverServices(nil)
+    }
+    
+    func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: (any Error)?) {
+        print("연결 실패: \(error?.localizedDescription ?? "")")
     }
     
     
@@ -213,5 +185,46 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     func peripheral(_ peripheral: CBPeripheral, didReadRSSI RSSI: NSNumber, error: Error?) {
         // 블루투스 기기의 신호 강도를 요청하는 peripheral.readRSSI()가 호출하는 함수입니다.
         // 신호 강도와 관련된 코드를 작성합니다.(필요하다면 작성해주세요.)
+    }
+}
+
+extension BluetoothManager {
+    // 광고 데이터 안에 제조사 데이터가 있는지 확인
+    private func manufacturerName(_ advertisementData: [String : Any]) -> String? {
+        guard let manufacturerData = advertisementData[CBAdvertisementDataManufacturerDataKey] as? Data else {
+            return nil
+        }
+        
+        print("🏷 제조사 데이터: \(manufacturerData as NSData)")
+        
+        // 바이트 배열로 변환
+        let bytes = [UInt8](manufacturerData)
+        
+        // 예시: 앞 2바이트는 제조사 ID (리틀 엔디안)
+        if bytes.count >= 2 {
+            let manufacturerID = UInt16(bytes[1]) << 8 | UInt16(bytes[0])
+            print("🏭 제조사 ID: \(String(format: "0x%04X", manufacturerID))")
+            
+            let findDevice = companyIdentifiers?.first(where: { "\($0["value"] ?? "")" == "\(manufacturerID)" })
+            
+            
+            if
+                let temp = advertisementData[CBAdvertisementDataLocalNameKey] as? String,
+                let adLocalName = temp.toOptionalIfEmpty
+            {
+                print("🏭 제조사 명: \(adLocalName)")
+                return adLocalName
+            } else if let manufacturerName = "\(findDevice?["name"] ?? "")".toOptionalIfEmpty {
+                print("🏭 제조사 명: \(manufacturerName)")
+                return manufacturerName
+            }
+            
+            // 이후 바이트는 커스텀 데이터
+            let customPayload = bytes.dropFirst(2)
+            print("📦 제조사 정의 데이터: \(customPayload.map { String(format: "%02X", $0) }.joined(separator: " "))")
+            return nil
+        } else {
+            return nil
+        }
     }
 }
