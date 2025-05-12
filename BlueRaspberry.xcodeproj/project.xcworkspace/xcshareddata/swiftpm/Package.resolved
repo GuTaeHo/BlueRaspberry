@@ -1,0 +1,24 @@
+{
+  "originHash" : "fc28c191c49b9b8160fc2cf0156a686106187a141e014c59772f26ed4a39ed03",
+  "pins" : [
+    {
+      "identity" : "soybean",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/GuTaeHo/SoyBean.git",
+      "state" : {
+        "revision" : "8b40eebf670a62e4d965619b45ce8b46bf3f4de7",
+        "version" : "1.0.34"
+      }
+    },
+    {
+      "identity" : "yams",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/jpsim/Yams.git",
+      "state" : {
+        "revision" : "b4b8042411dc7bbb696300a34a4bf3ba1b7ad19b",
+        "version" : "5.3.1"
+      }
+    }
+  ],
+  "version" : 3
+}
